@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulador de Cores</title>
+
+    <script src="js/kinetic.js" charset="utf-8"></script>
+    <style>
+    canvas {
+        border: 3px solid gray;
+    }
+
+    #canvasDiv{
+        width: 685px;
+        margin: 20px auto;
+    }
+
+
+    #imagemOriginal{
+        display: none;
+    }
+
+    #telaAreaCor{
+    }
+
+    </style>
+</head>
+<body>
+
+    <!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+
+    <div id="canvasDiv">
+        <canvas id="canvas" width="685" height="490"></canvas>
+    </div>
+
+    <div id="cores">
+        <ul>
+            <li data-cor="rgb(0, 0, 0)">PRETO</li>
+            <li data-cor="rgb(255,255,255)">BRANCO</li>
+            <li data-cor="rgb(255,0,0)">VERMELHO</li>
+        </ul>
+    </div>
+
+    <img id="imagemOriginal" src="fotos/salaa-original.jpg" alt="" >
+
+    <svg id="telaAreaCor" xmlns="http://www.w3.org/2000/svg" version="1.1" width="685" height="490" data-z-index="4" style="z-index: 4;">
+
+        <polygon points="152,59,474,103,687,26,685,299,682,297,676,297,671,299,668,302,666,307,661,308,656,307,652,307,645,307,638,307,632,305,627,305,622,303,617,302,615,302,612,302,607,306,604,312,601,317,599,320,597,325,563,323,541,322,521,321,506,321,492,320,493,317,494,314,495,309,496,305,497,302,495,300,491,300,482,301,471,302,465,302,461,302,457,302,455,302,450,302,445,301,437,301,426,301,410,301,401,303,393,305,388,307,387,312,385,320,271,322,258,322,251,322,249,322,246,323,246,325,245,382,246,398,248,399,253,400,255,402,252,402,249,402,249,404,249,409,249,420,232,421,230,403,229,398,229,396,228,395,226,395,217,397,202,403,187,407,179,408,166,409,160,409,154,406"  style="fill: rgba(0, 0, 0, 0.8);"  ></polygon>
+
+        <polygon  points="238,137,394,151,394,265,237,263,237,136" data-excludent="1" style="fill: transparent;"></polygon>
+
+        <polygon points="687,27,473,103,-0,38,-0,-1,48,-0,63,5,79,10,102,16,128,21,161,27,189,30,221,34,256,36,283,38,320,38,350,38,384,37,424,34,487,26,529,18,563,10,593,-0,685,-0,685,27"  style="fill: rgba(0, 0, 0, 0.8);"></polygon>
+
+        <polygon points="592,0,563,10,522,19,487,26,423,34,385,37,346,38,282,38,230,34,189,30,160,26,128,21,102,16,62,6,49,-0,592,-0,337,-4" style="fill: rgba(0, 0, 0, 0.8);"></polygon>
+    </svg>
+
+    <script src="js/simulador.js" charset="utf-8"></script>
+
+    <script type="text/javascript">
+    window.onload = function() { simulador.init(); };
+
+    </script>
+</body>
+</html>
