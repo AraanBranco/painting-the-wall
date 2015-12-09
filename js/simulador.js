@@ -2,19 +2,17 @@ var simulador = (function () {
 
 	"use strict";
 
-	var canvas_teste, context_teste,
+	var canvasFinal, contextFinal,
 	canvasMascara, contextMascara,
+	canvasSvg, contextSvg,
 	canvas, context,
 	width = 685,
 	height = 490,
-	imagemOriginal,
-	telaAreaCor,
-	telaAreaCorImg  = new Image,
-	telaAreaCorXML,
-	corRgb,
+	imagemOriginal = document.getElementById("imagemOriginal"),
+	corRgb = 'rgb(180, 214, 227)',
 	corSelecionada = 'transparent',
-	mascara = new Kinetic.Layer(),
-	polygonsArea = new Kinetic.Layer()
+	polygonsArea = new Kinetic.Layer(),
+	tela = new Kinetic.Stage({ container: 'tela-kinect', width: width,height: height })
 
 	,consoleLog = function( txt ){
 		console.log( txt );
@@ -31,21 +29,28 @@ var simulador = (function () {
 
 				var polPoints = String( p.attributes['points'].value ).split(',');
 
-				var polygon = new Kinetic.Polygon({
-					points: polPoints,
-					fill: '#660000',
-					strokeWidth: 0
-				});
 
+				var polygon;
 				if( typeof p.attributes['data-excludent'] != 'undefined' && p.attributes['data-excludent'].value == '1'){
+					polygon = new Kinetic.Polygon({
+						name: 'selecao',
+						points: polPoints,
+						strokeWidth: 0
+					});
+
 					polygon.infoCor = 'nao-cor';
+				}else{
+					polygon = new Kinetic.Polygon({
+						name: 'selecao',
+						points: polPoints,
+						strokeWidth: 0
+					});
+
 				}
 
 				polygonsArea.add( polygon );
 			}
 		}
-
-		desenha();
 	}
 
 	,calculaAreaPolygon = function (polygon){
@@ -89,76 +94,115 @@ var simulador = (function () {
 	}
 
 	,desenha = function (){
+		consoleLog("Iniciou desenha ");
 
-		var polygons = polygonsArea.children;
+		var invalidArea   = [0, 0, canvas.width, canvas.height];
+		var imagemObj     = context.getImageData(invalidArea[0], invalidArea[1], invalidArea[2], invalidArea[3]);
+		var imagemData    = imagemObj.data;
+
+		var mascaraData   = contextMascara.getImageData(invalidArea[0], invalidArea[1], invalidArea[2], invalidArea[3]).data;
+
+		for (var o = 0; o < mascaraData.length; o += 4)
+		{
+			var imgRGB = {
+				r: imagemData[o],
+				g: imagemData[o + 1],
+				b: imagemData[o + 2],
+				a: imagemData[o + 3]
+			};
+
+			var maskRGB = {
+				r: mascaraData[o],
+				g: mascaraData[o + 1],
+				b: mascaraData[o + 2],
+				a: mascaraData[o + 3]
+			};
+
+			var maskHSL = COLOR_SPACE.rgb2hsl(maskRGB.r, maskRGB.g, maskRGB.b);
+			var imgHSL  = COLOR_SPACE.rgb2hsl(imgRGB.r, imgRGB.g, imgRGB.b);
+
+			var alphaMask = maskRGB.a / 255;
+
+			var lumenImg  = imgHSL.l / 255;
+
+			var minGamut = maskHSL.l - Math.min((maskHSL.l * .4), 40);
+			var maxGamut = maskHSL.l + (255 - maskHSL.l) * .2;
+
+			var correctGamut = minGamut + (maxGamut - minGamut) * lumenImg;
+			var noiseGamut = 255 * .01;
+			correctGamut += noiseGamut * Math.cos(Math.random() * Math.PI);
+			correctGamut = correctGamut > 255 ? 255 : correctGamut < 0 ? 0 : correctGamut;
+
+			var newRGB = COLOR_SPACE.hsl2rgb(maskHSL.h, maskHSL.s, Math.round(correctGamut));
+
+			imagemObj.data[o + 0] = Math.round((1 - alphaMask) * imgRGB.r + alphaMask * newRGB.r); // R
+			imagemObj.data[o + 1] = Math.round((1 - alphaMask) * imgRGB.g + alphaMask * newRGB.g); // G
+			imagemObj.data[o + 2] = Math.round((1 - alphaMask) * imgRGB.b + alphaMask * newRGB.b); // B
+		}
+
+
+		contextFinal.putImageData(imagemObj, invalidArea[0], invalidArea[1]);
+
+	}
+
+	,desenhaMascara = function (){
+		consoleLog("Iniciou desenhaMascara");
+		var polygons = tela.get('.selecao');
 
 		for (var i = 0; i < polygons.length; i++){
+
 			var polygon = polygons[i];
 
 			var area = calculaAreaPolygon(polygon);
+
 			var contextPolygon = polygon.getLayer().getContext();
 
+			var polygonData = contextPolygon.getImageData( area[0], area[1], area[2], area[3] );
 
-			var imagemData = context.getImageData(area[0], area[1], area[2], area[3]);
-			var polygonData = contextPolygon.getImageData(area[0], area[1], area[2], area[3]);
-			var mascaraData = contextMascara.getImageData(area[0], area[1], area[2], area[3]);
+			var svgData = contextSvg.getImageData(area[0], area[1], area[2], area[3] );
 
-			var tmpData  = context_teste.createImageData( polygonData );
-
-			for (var d = 0; d < tmpData.data.length; d += 4){
-
-				var imagemRGB = {
-					r: imagemData.data[d + 0],
-					g: imagemData.data[d + 1],
-					b: imagemData.data[d + 2],
-					a: imagemData.data[d + 3]
-				};
-
-				var polygonRGB = {
-					r: polygonData.data[d + 0],
-					g: polygonData.data[d + 1],
-					b: polygonData.data[d + 2],
-					a: polygonData.data[d + 3]
-				};
-
-				var mascaraRGB = {
-					r: mascaraData.data[d + 0],
-					g: mascaraData.data[d + 1],
-					b: mascaraData.data[d + 2],
-					a: mascaraData.data[d + 3]
-				};
+			var tmpData  = contextPolygon.createImageData( polygonData );
 
 
-				var polygonAlpha  = polygonRGB.a / 255;
-				var mascaraAlpha  = mascaraRGB.a / 255;
+			for (var d = 0; d < polygonData.data.length; d += 4){
 
+				var polygonRGB = { r: polygonData.data[d + 0],g: polygonData.data[d + 1],b: polygonData.data[d + 2],a: polygonData.data[d + 3] };
+				var svgRGB = { r: svgData.data[d + 0], g: svgData.data[d + 1],b: svgData.data[d + 2],a: svgData.data[d + 3] };
 
-				if ( /^nao-cor$/i.test(polygon.infoCor) ){
+				tmpData.data[d + 0] = svgRGB.r;
+				tmpData.data[d + 1] = svgRGB.g;
+				tmpData.data[d + 2] = svgRGB.b;
 
-					tmpData.data[d + 0] = imagemRGB.r; // R
-					tmpData.data[d + 1] = imagemRGB.g; // G
-					tmpData.data[d + 2] = imagemRGB.b; // B
-
-					if (polygonRGB.r == 255 && polygonRGB.g == 255 && polygonRGB.b == 255 && /^nao-cor$/i.test(polygon.infoCor)){
-						tmpData.data[d + 3] = 255 - polygonRGB.a; // A
-					}else{
-						tmpData.data[d + 3] = imagemRGB.a; // A
-					}
-
+				if( svgRGB.r == 0 && svgRGB.b == 0 && svgRGB.g == 0 && /^nao-cor$/i.test(polygon.infoCor) ){
+					tmpData.data[d + 3] = 0;
 				}else{
-					tmpData.data[d + 0] = mascaraRGB.r; // R
-					tmpData.data[d + 1] = mascaraRGB.g; // G
-					tmpData.data[d + 2] = mascaraRGB.b; // B
-					tmpData.data[d + 3] = mascaraRGB.a; // A
+					tmpData.data[d + 3] = svgRGB.a;
 				}
 
 
 			}
 
-			context_teste.putImageData(tmpData, area[0], area[1]);
-
+			contextMascara.putImageData(tmpData, area[0], area[1]);
+			polygon.destroy();
 		}
 
+		desenha();
+
+	}
+
+	,desenhaSvg = function(){
+		// SVG
+		consoleLog("Iniciou desenhaSVG ");
+
+		var telaAreaCor = document.getElementById("telaAreaCor");
+		var telaAreaCorXML = (new XMLSerializer).serializeToString( telaAreaCor );
+		var telaAreaCorImg  = new Image;
+		telaAreaCorImg.src = 'data:image/svg+xml,' + encodeURIComponent( telaAreaCorXML );
+		telaAreaCorImg.onload = function(){
+			contextSvg.drawImage( telaAreaCorImg, 0, 0, telaAreaCorImg.width, telaAreaCorImg.height );
+			calculaPolygons();
+			desenhaMascara();
+		};
 	}
 
 	,events = function(){
@@ -175,25 +219,25 @@ var simulador = (function () {
 		for (var i = 0; i < polygons.length; i++) {
 			polygons[i].addEventListener("click", function(){
 
-				// if( typeof this.attributes['data-excludent'] != 'undefined'  this.attributes['data-excludent'].value != 1 ){
+				if(  this.attributes['data-excludent'].value != 1 ){
+					if(typeof this.attributes['data-titulo'] != 'undefined' ){
+						this.attributes['data-titulo'].value = "";
+					}
 
-				if(typeof this.attributes['data-titulo'] != 'undefined' ){
-					this.attributes['data-titulo'].value = "";
-				}
+					if(typeof this.attributes['data-codigo'] != 'undefined' ){
+						this.attributes['data-codigo'].value = "";
+					}
 
-				if(typeof this.attributes['data-codigo'] != 'undefined' ){
-					this.attributes['data-codigo'].value = "";
-				}
+					if(typeof this.attributes['data-cor'] != 'undefined' ){
+						this.attributes['data-cor'].value = "";
+					}
 
-				if(typeof this.attributes['data-cor'] != 'undefined' ){
-					this.attributes['data-cor'].value = "";
+					if(typeof this.attributes['style'] != 'undefined' ){
+						consoleLog("Pintou : "+ corSelecionada);
+						this.attributes['style'].value = 'fill: '+corSelecionada;
+						desenhaSvg();
+					}
 				}
-
-				if(typeof this.attributes['style'] != 'undefined' ){
-					consoleLog("Pintou : "+ corSelecionada);
-					this.attributes['style'].value = 'fill: '+corSelecionada;
-				}
-				// }
 			});
 		}
 
@@ -201,27 +245,24 @@ var simulador = (function () {
 
 	,init = function () {
 
-		imagemOriginal = document.getElementById("imagemOriginal");
-
-		canvas_teste = document.getElementById('canvas');
-		context_teste = canvas_teste.getContext('2d');
-		context_teste.drawImage(imagemOriginal, 0, 0, width, height);
 
 		canvas = document.getElementById('canvas-imagem');
 		context = canvas.getContext('2d');
 		context.drawImage(imagemOriginal, 0, 0, width, height);
 
-
 		canvasMascara = document.getElementById('canvas-mascara');
 		contextMascara = canvasMascara.getContext('2d');
-		//SVG
-		telaAreaCor = document.getElementById("telaAreaCor");
-		telaAreaCorXML = (new XMLSerializer).serializeToString( telaAreaCor );
-		telaAreaCorImg.src = 'data:image/svg+xml,' + encodeURIComponent( telaAreaCorXML );
-		telaAreaCorImg.onload = function(){
-			contextMascara.drawImage( telaAreaCorImg, 0, 0, telaAreaCorImg.width, telaAreaCorImg.height );
-			calculaPolygons();
-		};
+
+		canvasSvg = document.getElementById('canvas-svg');
+		contextSvg = canvasSvg.getContext('2d');
+
+		canvasFinal = document.getElementById('canvas-final');
+		contextFinal = canvasFinal.getContext('2d');
+
+		tela.add( polygonsArea );
+
+		events();
+		desenhaSvg();
 
 	};
 
