@@ -14,10 +14,6 @@ var simulador = (function () {
 	polygonsArea = new Kinetic.Layer(),
 	tela = new Kinetic.Stage({ container: 'tela-kinect', width: width,height: height })
 
-	,consoleLog = function( txt ){
-		console.log( txt );
-	}
-
 	,loading = function( close ){
 		close = close ? close : false;
 		var el = document.getElementById("loading");
