@@ -5,83 +5,45 @@
 
     <script src="js/kinetic.js" charset="utf-8"></script>
     <script src="js/supportColorSpace.js" charset="utf-8"></script>
-
     <!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
 
     <style>
 
-    canvas{
-        border: solid 1px red;
+    #tela, #tela-kinect, #imagemOriginal{
+        display: none;
     }
 
-    p{
-        display: inline-block;
-        vertical-align: top;
-    }
 
-    #tela{
-        width: 685px;
-        margin: 20px auto;
-        position: relative;
-        display: inline-block;
-        vertical-align: top;
-    }
-
-    #tela-kinect{
-        width: 685px;
-        margin: 20px auto;
-        position: relative;
-        display: inline-block;
-        vertical-align: top;
-    }
-
-    #boxtelaAreaCor{
-        margin: 20px 10%;
-        display: inline-block;
-        vertical-align: top;
-        width: 80%;
-    }
-
-    #telaAreaCor{
-        position: relative;
+    #box{
         margin: 20px auto;
         display: block;
         vertical-align: top;
         width: 685px;
-        border: solid 1px gray;
+        height: 490px;
+        position: relative;
+        border: solid 1px red;
+
     }
 
-    #canvasDiv{
+    #telaAreaCor{
+        position: absolute;
+        top: 0px;
+        left: 0px;
         width: 685px;
-
-        position: absolute;
-        left: 0px;
-        top: 0px;
-
-        position: relative;
-        display: inline-block;
-        vertical-align: top;
+        height: 490px;
+        z-index: 3;
     }
 
-    #canvasDiv canvas{
-        position: absolute;
-        left: 0px;
-        top: 0px;
 
-        position: relative;
-        display: inline-block;
-        vertical-align: top;
-    }
-
-    #imagemOriginal{
-        display: none;
-    }
 
     #canvas-final{
-        margin: 20px;
-        border: 3px solid gray;
-        display: inline-block;
-        vertical-align: top;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 685px;
+        height: 490px;
+        z-index: 2;
+
     }
 
     #cores{
@@ -90,6 +52,8 @@
         width: 100%;
         height: 100px;
         text-align: center;
+        border: solid 1px red;
+
     }
 
     #cores ul li{
@@ -103,9 +67,16 @@
         text-align: center;
     }
 
-    #tela-kinect{
-        display: none;
+    #loading{
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255, 0.6);
+        z-index: 999;
     }
+
 
     </style>
 </head>
@@ -126,37 +97,31 @@
     </div>
     <img id="imagemOriginal" src="fotos/salaa-original.jpg" alt="" >
 
-    <div id="boxtelaAreaCor">
+    <div id="box">
+        <div id="loading"></div>
+        <svg id="telaAreaCor" xmlns="http://www.w3.org/2000/svg" version="1.1" width="685" height="490">
 
-        <svg id="telaAreaCor" xmlns="http://www.w3.org/2000/svg" version="1.1" width="685" height="490" data-z-index="4" style="z-index: 4;">
+            <polygon points="152,59,474,103,687,26,685,299,682,297,676,297,671,299,668,302,666,307,661,308,656,307,652,307,645,307,638,307,632,305,627,305,622,303,617,302,615,302,612,302,607,306,604,312,601,317,599,320,597,325,563,323,541,322,521,321,506,321,492,320,493,317,494,314,495,309,496,305,497,302,495,300,491,300,482,301,471,302,465,302,461,302,457,302,455,302,450,302,445,301,437,301,426,301,410,301,401,303,393,305,388,307,387,312,385,320,271,322,258,322,251,322,249,322,246,323,246,325,245,382,246,398,248,399,253,400,255,402,252,402,249,402,249,404,249,409,249,420,232,421,230,403,229,398,229,396,228,395,226,395,217,397,202,403,187,407,179,408,166,409,160,409,154,406"  style="fill: transparent" data-excludent="0"  ></polygon>
 
-            <polygon points="152,59,474,103,687,26,685,299,682,297,676,297,671,299,668,302,666,307,661,308,656,307,652,307,645,307,638,307,632,305,627,305,622,303,617,302,615,302,612,302,607,306,604,312,601,317,599,320,597,325,563,323,541,322,521,321,506,321,492,320,493,317,494,314,495,309,496,305,497,302,495,300,491,300,482,301,471,302,465,302,461,302,457,302,455,302,450,302,445,301,437,301,426,301,410,301,401,303,393,305,388,307,387,312,385,320,271,322,258,322,251,322,249,322,246,323,246,325,245,382,246,398,248,399,253,400,255,402,252,402,249,402,249,404,249,409,249,420,232,421,230,403,229,398,229,396,228,395,226,395,217,397,202,403,187,407,179,408,166,409,160,409,154,406"  style="fill: rgb(180, 214, 227);" data-excludent="0"  ></polygon>
+            <polygon points="238,137,394,151,394,265,237,263,237,136" data-excludent="1" style="fill: rgb(0,0,0);"></polygon>
 
-            <polygon points="238,137,394,151,394,265,237,263,237,136" data-excludent="1" style="fill: rgb(0, 0, 0);"></polygon>
+            <polygon points="687,27,473,103,-0,38,-0,-1,48,-0,63,5,79,10,102,16,128,21,161,27,189,30,221,34,256,36,283,38,320,38,350,38,384,37,424,34,487,26,529,18,563,10,593,-0,685,-0,685,27" data-excludent="0"  style="fill: transparent;"></polygon>
 
-            <polygon points="687,27,473,103,-0,38,-0,-1,48,-0,63,5,79,10,102,16,128,21,161,27,189,30,221,34,256,36,283,38,320,38,350,38,384,37,424,34,487,26,529,18,563,10,593,-0,685,-0,685,27" data-excludent="0"  style="fill: rgb(0, 0, 0);"></polygon>
-
-            <polygon points="592,0,563,10,522,19,487,26,423,34,385,37,346,38,282,38,230,34,189,30,160,26,128,21,102,16,62,6,49,-0,592,-0,337,-4" style="fill: rgb(143, 82, 113);" data-excludent="0"></polygon>
+            <polygon points="592,0,563,10,522,19,487,26,423,34,385,37,346,38,282,38,230,34,189,30,160,26,128,21,102,16,62,6,49,-0,592,-0,337,-4" style="fill: transparent;" data-excludent="0"></polygon>
 
         </svg>
-        
+
+        <canvas id="canvas-final" width="685" height="490" ></canvas>
     </div>
 
     <div id="tela">
         <div id="canvasDiv">
-            <p>Canvas Imagem</p>
             <canvas id="canvas-imagem" width="685" height="490" ></canvas>
-            <p>Canvas Mascara</p>
             <canvas id="canvas-mascara" width="685" height="490" ></canvas>
-            <p>Canvas SVG</p>
             <canvas id="canvas-svg" width="685" height="490" ></canvas>
         </div>
-
-
     </div>
 
-
-    <canvas id="canvas-final" width="685" height="490" ></canvas>
 
     <div id="tela-kinect"></div>
 
@@ -165,5 +130,7 @@
     <script type="text/javascript">
     window.onload = function() {simulador.init(); };
     </script>
+
+
 </body>
 </html>

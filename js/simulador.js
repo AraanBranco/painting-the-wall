@@ -18,6 +18,12 @@ var simulador = (function () {
 		console.log( txt );
 	}
 
+	,loading = function( close ){
+		close = close ? close : false;
+		var el = document.getElementById("loading");
+		if( close ) el.style.display = 'none'; else el.style.display = 'block';
+	}
+
 	,calculaPolygons = function(){
 		var poly = document.querySelectorAll('#telaAreaCor polygon');
 
@@ -35,6 +41,7 @@ var simulador = (function () {
 					polygon = new Kinetic.Polygon({
 						name: 'selecao',
 						points: polPoints,
+						fill: 'rgb(0,0,0)',
 						strokeWidth: 0
 					});
 
@@ -94,7 +101,6 @@ var simulador = (function () {
 	}
 
 	,desenha = function (){
-		consoleLog("Iniciou desenha ");
 
 		var invalidArea   = [0, 0, canvas.width, canvas.height];
 		var imagemObj     = context.getImageData(invalidArea[0], invalidArea[1], invalidArea[2], invalidArea[3]);
@@ -142,11 +148,11 @@ var simulador = (function () {
 
 
 		contextFinal.putImageData(imagemObj, invalidArea[0], invalidArea[1]);
-
+		limparPolygons();
+		loading( true );
 	}
 
 	,desenhaMascara = function (){
-		consoleLog("Iniciou desenhaMascara");
 		var polygons = tela.get('.selecao');
 
 		for (var i = 0; i < polygons.length; i++){
@@ -173,7 +179,7 @@ var simulador = (function () {
 				tmpData.data[d + 1] = svgRGB.g;
 				tmpData.data[d + 2] = svgRGB.b;
 
-				if( svgRGB.r == 0 && svgRGB.b == 0 && svgRGB.g == 0 && /^nao-cor$/i.test(polygon.infoCor) ){
+				if( svgRGB.r == 255 && svgRGB.b == 255 && svgRGB.g == 255 && /^nao-cor$/i.test(polygon.infoCor) ){
 					tmpData.data[d + 3] = 0;
 				}else{
 					tmpData.data[d + 3] = svgRGB.a;
@@ -191,13 +197,23 @@ var simulador = (function () {
 	}
 
 	,desenhaSvg = function(){
-		// SVG
-		consoleLog("Iniciou desenhaSVG ");
+
+		loading();
+		var polygons =  document.querySelectorAll("#telaAreaCor polygon");
+		for (var i = 0; i < polygons.length; i++) {
+			if(typeof polygons[i].attributes['data-excludent'] != 'undefined' && polygons[i].attributes['data-excludent'].value == 1 ){
+				polygons[i].attributes['style'].value = 'fill: rgb(255,255,255);';
+			}
+
+		}
 
 		var telaAreaCor = document.getElementById("telaAreaCor");
 		var telaAreaCorXML = (new XMLSerializer).serializeToString( telaAreaCor );
 		var telaAreaCorImg  = new Image;
 		telaAreaCorImg.src = 'data:image/svg+xml,' + encodeURIComponent( telaAreaCorXML );
+
+
+
 		telaAreaCorImg.onload = function(){
 			contextSvg.drawImage( telaAreaCorImg, 0, 0, telaAreaCorImg.width, telaAreaCorImg.height );
 			calculaPolygons();
@@ -205,18 +221,27 @@ var simulador = (function () {
 		};
 	}
 
+	,limparPolygons = function(){
+		var polygons =  document.querySelectorAll("#telaAreaCor polygon");
+		for (var i = 0; i < polygons.length; i++) {
+			polygons[i].attributes['style'].value = 'fill: transparent;';
+		}
+	}
+
 	,events = function(){
+
 
 		var cores =  document.querySelectorAll("#cores ul li")
 		for (var i = 0; i < cores.length; i++) {
 			cores[i].addEventListener("click", function(){
 				corSelecionada = this.attributes['data-cor'].value;
-				consoleLog("Cor selecionada: "+ corSelecionada);
 			});
 		}
 
+
 		var polygons =  document.querySelectorAll("#telaAreaCor polygon");
 		for (var i = 0; i < polygons.length; i++) {
+
 			polygons[i].addEventListener("click", function(){
 
 				if(  this.attributes['data-excludent'].value != 1 ){
@@ -233,12 +258,14 @@ var simulador = (function () {
 					}
 
 					if(typeof this.attributes['style'] != 'undefined' ){
-						consoleLog("Pintou : "+ corSelecionada);
 						this.attributes['style'].value = 'fill: '+corSelecionada;
 						desenhaSvg();
 					}
 				}
 			});
+
+
+
 		}
 
 	}
